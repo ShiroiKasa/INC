@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.2, user-scalable=yes">
+  <title>跳转平台</title>
+  <style>
+    /* ---------- 全局重置与变量 ---------- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-dark: #0b0b0b;
+      --bg-card: #1a1a1a;
+      --silver-light: #e0e0e0;
+      --silver-mid: #a0a0a0;
+      --gold-light: #f0e6c0;
+      --gold-mid: #c9a95c;
+      --gold-dark: #7a5c2e;
+      --text-primary: #f5f5f5;
+      --text-secondary: #b0b0b0;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --shadow-card: 0 20px 35px rgba(0,0,0,0.6);
+      --transition-base: 0.3s cubic-bezier(0.25, 0.1, 0.15, 1);
+      --glass-bg: rgba(20, 20, 20, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      font-family: 'Inter', 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+      color: var(--text-primary);
+      line-height: 1.5;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      position: relative;
+    }
+
+    /* 动态光晕背景 */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 40% 30%, rgba(200, 180, 120, 0.08) 0%, transparent 60%),
+                  radial-gradient(circle at 70% 70%, rgba(160, 160, 160, 0.06) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ---------- 主容器 ---------- */
+    .hub-container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+    }
+
+    /* ---------- 头部：平台标题 ---------- */
+    .hub-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.75rem;
+    }
+
+    .hub-title {
+      font-size: clamp(2.2rem, 8vw, 4rem);
+      font-weight: 650;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #ffffff 0%, #d4d4d4 35%, #c9a95c 70%, #f0e6c0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5));
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .hub-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+      font-weight: 400;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #a0a0a0, #c0b280, #a0a0a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* 分隔装饰 */
+    .divider {
+      width: 80px;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, var(--gold-mid), var(--silver-light), transparent);
+      border-radius: 4px;
+      margin: 0.25rem auto 0;
+    }
+
+    /* ---------- 卡片网格 ---------- */
+    .games-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2rem;
+      align-items: stretch;
+    }
+
+    /* ---------- 卡片样式 ---------- */
+    .game-card {
+      background: var(--bg-card);
+      border-radius: 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition-base), box-shadow var(--transition-base);
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      /* 金银渐变边框 */
+    }
+
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      padding: 1.5px;
+      background: linear-gradient(145deg, #b0b0b0 0%, #c9a95c 45%, #e0e0e0 70%, #7a5c2e 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+      opacity: 0.7;
+      transition: opacity 0.3s;
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 30px 45px rgba(0,0,0,0.8), 0 0 20px rgba(200, 170, 100, 0.3);
+    }
+
+    .game-card:hover::before {
+      opacity: 1;
+      background: linear-gradient(145deg, #d0d0d0 0%, #e0c87c 45%, #f5f5f5 70%, #b8943e 100%);
+    }
+
+    /* ---------- 图片占位区域 ---------- */
+    .card-image {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .card-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+
+    .game-card:hover .card-image img {
+      transform: scale(1.03);
+    }
+
+    /* 占位符提示（当使用占位图时显示） */
+    .placeholder-overlay {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(4px);
+      color: #aaa;
+      font-size: 0.7rem;
+      padding: 0.25rem 0.7rem;
+      border-radius: 20px;
+      letter-spacing: 0.3px;
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+
+    /* ---------- 卡片信息区 ---------- */
+    .card-content {
+      padding: 1.5rem 1.2rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+
+    .game-name {
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+      background: linear-gradient(135deg, #e6e6e6 0%, #cfb87c 80%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.2rem;
+    }
+
+    .game-author {
+      font-size: 0.85rem;
+      color: var(--silver-mid);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .game-author::before {
+      content: "✧";
+      font-size: 0.9rem;
+      color: var(--gold-mid);
+    }
+
+    .game-desc {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-top: 0.3rem;
+    }
+
+    /* ---------- 按钮（扁平金银风格） ---------- */
+    .card-actions {
+      margin-top: auto;
+      padding-top: 0.8rem;
+    }
+
+    .play-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      background: linear-gradient(105deg, #2c2c2c 0%, #3a3525 100%);
+      border: 1px solid rgba(200, 170, 100, 0.4);
+      color: #e6d7a8;
+      font-weight: 550;
+      font-size: 1rem;
+      padding: 0.8rem 1.2rem;
+      border-radius: 40px;
+      text-decoration: none;
+      letter-spacing: 0.4px;
+      transition: all var(--transition-base);
+      backdrop-filter: blur(4px);
+      background-color: rgba(30, 30, 30, 0.8);
+      cursor: pointer;
+    }
+
+    .play-btn:hover {
+      background: linear-gradient(105deg, #3a3525 0%, #5a4a2a 100%);
+      border-color: rgba(230, 200, 120, 0.8);
+      color: #f7efd6;
+      box-shadow: 0 8px 18px rgba(180, 140, 40, 0.25);
+      transform: scale(1.02);
+    }
+
+    .play-btn:active {
+      transform: scale(0.98);
+    }
+
+    /* ---------- 页脚 ---------- */
+    .hub-footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      color: #555;
+      font-size: 0.8rem;
+      letter-spacing: 0.5px;
+    }
+
+    .hub-footer span {
+      color: #7a7a7a;
+    }
+
+    /* ---------- 响应式微调 ---------- */
+    @media (max-width: 680px) {
+      body {
+        padding: 1.5rem 1rem;
+      }
+      .games-grid {
+        gap: 1.5rem;
+        grid-template-columns: 1fr;
+      }
+      .game-name {
+        font-size: 1.3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hub-container">
+    <!-- 头部标题区 -->
+    <header class="hub-header">
+      <h1 class="hub-title"></h1>
+    </header>
+
+    <!-- 游戏卡片网格：链接跳转到不同的增量游戏 -->
+    <div class="games-grid">
+      
+      <!-- 卡片 1：夸克增量网页重置版 -->
+      <div class="game-card">
+        <div class="card-image">
+          <img src="Quark.png" 
+               alt="夸克增量网页重置版预览" 
+               loading="lazy">
+          <span class="placeholder-overlay">夸克增量预览</span>
+        </div>
+        <div class="card-content">
+          <h3 class="game-name">夸克增量网页重置版</h3>
+          <div class="game-author">作者：ShiroiKasa</div>
+          <p class="game-desc">简介：无</p>
+          <div class="card-actions">
+            <a href="https://shiroikasa.github.io/INCQuarkng-/" target="_blank" rel="noopener noreferrer" class="play-btn">
+              ▶ 进入游戏
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡片 2：PP Tree -->
+      <div class="game-card">
+        <div class="card-image">
+          <img src="PP.png" 
+               alt="PP Tree 预览" 
+               loading="lazy">
+          <span class="placeholder-overlay">PP Tree预览</span>
+        </div>
+        <div class="card-content">
+          <h3 class="game-name">PP Tree</h3>
+          <div class="game-author">作者：𝓢𝓲𝓰𝓶𝓪 喵～</div>
+          <p class="game-desc">简介：无</p>
+          <div class="card-actions">
+            <a href="https://sigma-hopedy.github.io/The-PP-Tree/" target="_blank" rel="noopener noreferrer" class="play-btn">
+              ▶ 进入游戏
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 卡片 3：彩纸增量 -->
+      <div class="game-card">
+        <div class="card-image">
+          <img src="" 
+               alt="彩纸增量预览" 
+               loading="lazy">
+          <span class="placeholder-overlay">暂无预览</span>
+        </div>
+        <div class="card-content">
+          <h3 class="game-name">彩纸增量</h3>
+          <div class="game-author">作者：24.1</div>
+          <p class="game-desc">简介：无</p>
+          <div class="card-actions">
+            <a href="https://241zengziping.github.io/MPI.html" target="_blank" rel="noopener noreferrer" class="play-btn">
+              ▶ 进入游戏
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 继续添加更多卡片，遵循相同结构 -->
+    </div>
+
+    <!-- 底部信息 -->
+    <footer class="hub-footer">
+      <span></span>  ·  <span></span>
+    </footer>
+  </div>
+</body>
+</html>
